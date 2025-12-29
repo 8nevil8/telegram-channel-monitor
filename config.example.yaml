@@ -1,0 +1,199 @@
+# Telegram Channel Monitor Configuration
+
+# Channels to monitor (username or ID)
+# You can monitor multiple channels for the same products!
+# All products below will be matched across ALL channels listed here.
+# The channel name will be included in notifications.
+#
+# Supported formats:
+# - Full URL: https://t.me/channelname or http://t.me/channelname
+# - Username with @: @channelname
+# - Username only: channelname
+# - Private channel numeric ID: -1001234567890
+channels:
+  - "@channel1"  # Replace with your channel username
+  - "@channel2"  # Add more channels as needed
+  # - "https://t.me/channelname"  # Full Telegram URL also works!
+  # - "channelname"  # Plain username
+  # - -1001234567890  # Private channel numeric ID
+
+# Products to monitor
+products:
+  # Example 1: Monitor for iPhone with price filter
+  - name: "iPhone"
+    keywords:
+      - "iphone"
+      - "айфон"
+    exclude_keywords:  # Optional: skip messages with these words
+      - "куплю"
+      - "wanted"
+    price_range:  # Optional: filter by price (detects common formats)
+      min: 400
+      max: 1000
+    notify: true  # Send notification for this product
+
+  # Example 2: Monitor for laptops
+  - name: "MacBook"
+    keywords:
+      - "macbook"
+      - "macbook pro"
+      - "macbook air"
+    exclude_keywords:
+      - "broken"
+      - "parts only"
+    price_range:
+      min: 500
+      max: 1500
+    notify: true
+
+  # Example 3: Simple keyword match without price filter
+  - name: "Product Name"
+    keywords:
+      - "keyword1"
+      - "keyword2"
+    notify: true
+
+  # Example 4: Using regex for advanced matching
+  - name: "RTX Graphics Card"
+    keywords:
+      - "rtx 4090"
+      - "rtx.*4090"  # Regex pattern
+    price_range:
+      max: 2000
+    notify: true
+
+# Notification settings
+notifications:
+  # Send to your Telegram Saved Messages
+  telegram:
+    enabled: true
+    # Optional: send to a specific chat (default: "me" for Saved Messages)
+    chat_id: "me"  # or use @username or numeric ID
+
+  # Include original message link in notification
+  include_link: true
+
+  # Include matched keywords in notification
+  include_keywords: true
+
+# Monitoring settings
+monitoring:
+  # Check interval in seconds (for polling mode, not needed for real-time)
+  check_interval: 60
+
+  # Maximum age of messages to consider (in days)
+  # Only messages from the past X days will trigger notifications
+  # Set to 0 or null to disable age filtering (monitor all messages)
+  # Useful for ignoring old listings in marketplace channels
+  max_age_days: 3  # Only show items from past 3 days
+
+  # Save matched messages to file
+  save_matches: true
+  matches_file: "~/.tgmonitor/matches.json"
+
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  log_level: "INFO"
+  log_file: "~/.tgmonitor/monitor.log"
+
+# Message matching settings
+matching:
+  # Case sensitive matching
+  case_sensitive: false
+
+  # Match whole words only (avoids partial matches)
+  whole_word: false
+
+  # Enable regex pattern matching (allows patterns like "rtx.*4090")
+  regex_enabled: true
+
+# Price extraction patterns
+# Define how prices should be detected in messages
+# Patterns are tried in order - first match wins
+# Use {price} placeholder for the actual number
+price_patterns:
+  # MOST SPECIFIC patterns first to avoid ambiguity
+
+  # Currency before + space-separated (HIGHEST PRIORITY)
+  - pattern: '(?:\$|€)\s*(\d{1,4}(?:\s\d{3})+(?:[.,]\d{1,2})?)'
+    description: "Currency + space-separated ($1 500, €1 234)"
+
+  # Space-separated + currency after (MUST come before simple patterns)
+  # Matches: "1 500€" (1-2 digits + space + 3 digits) to avoid ambiguity with model numbers
+  # Excludes: "13 450€" (could be model number + price)
+  - pattern: '(?:^|[^\d])(\d{1,2}\s\d{3}(?:\s\d{3})*(?:[.,]\d{1,2})?)\s*(?:€|\$)'
+    description: "Space-separated + currency (1 500€, max 99 before space)"
+
+  # Price at end of description (after space-separated patterns)
+  # Matches: "...description 450€" or "...specs 450$" (but not "1 500€")
+  # The key: NOT preceded by another number with space
+  - pattern: '(?<!\d\s)[\s,;.]\s*(\d{3,4}(?:[.,]\d{1,2})?)\s*(?:€|\$)(?:\s|$)'
+    description: "End price (... 450€)"
+
+  # Simple standalone price + currency (lowest priority for currency-after)
+  # Matches: "450€" when it's clearly standalone
+  - pattern: '(?:^|\s)(\d{3,4}(?:[.,]\d{1,2})?)\s*(?:€|\$)'
+    description: "Standalone + currency (450€)"
+
+  # Space-separated + named currency
+  - pattern: '(\d{1,4}(?:\s\d{3})+(?:[.,]\d{1,2})?)\s*(?:EUR|eur|USD|usd|евро|dollars?|долларов?)'
+    description: "Space-separated + named (1 500 EUR)"
+
+  # Regular currency patterns (for non-space-separated numbers)
+  - pattern: '\$\s*{price}'          # $450, $ 450
+    description: "Dollar sign before"
+
+  - pattern: '€\s*{price}'           # €450, € 450
+    description: "Euro sign before"
+
+  - pattern: '{price}\s*\$'          # 450$, 450 $
+    description: "Dollar sign after"
+
+  - pattern: '{price}\s*€'           # 450€, 450 €
+    description: "Euro sign after"
+
+  # Space-separated thousands with 2+ groups (unambiguous)
+  # Matches: 1 234 567€, 12 345 678 USD (clearly thousands)
+  - pattern: '(\d{1,3}(?:\s\d{3}){2,}(?:[.,]\d{1,2})?)\s*(?:€|\$|EUR|eur|USD|usd|евро|dollars?|долларов?)'
+    description: "Multi-group space thousands (1 234 567€)"
+
+  # Space-separated with context keywords (avoid model numbers)
+  # Only matches if preceded by price keywords
+  - pattern: '(?:цена|price|кошт|cost)[:=\s]+(\d{1,4}\s\d{3}(?:[.,]\d{1,2})?)\s*(?:€|\$|EUR|eur|USD|usd|евро|dollars?|долларов?)?'
+    description: "Context + space-separated (цена 1 500)"
+
+  # Named currencies (multilingual)
+  - pattern: '{price}\s*(?:USD|usd|dollars?|долларов?|доллара)'
+    description: "USD/dollars"
+
+  - pattern: '{price}\s*(?:EUR|eur|euros?|евро|еур)'
+    description: "EUR/euros"
+
+  # Context-based patterns (common in Russian/Lithuanian)
+  - pattern: '(?:цена|цена:|price:|price)\s*{price}'
+    description: "Price: 450"
+
+  - pattern: '(?:за|for)\s*{price}'
+    description: "for 450"
+
+  - pattern: '{price}\s*(?:евро|eur|euro|euros)'
+    description: "450 евро"
+
+  # Standalone numbers (least specific, checked last)
+  # This will match plain numbers but may catch model numbers
+  - pattern: '\b{price}\b'
+    description: "Plain number (fallback)"
+    min_value: 50  # Optional: ignore numbers below this (helps avoid model numbers)
+
+# Price number format
+# Defines what a valid price number looks like
+price_number_format:
+  # Regex for capturing price numbers
+  # Supports: 1234, 1,234, 1234.56, 1,234.56, 1 234.56
+  # Uses non-breaking space for thousands to avoid matching "13 450" as one number
+  regex: '(\d{1,4}(?:[,]\d{3})*(?:[.,]\d{1,2})?)'
+
+  # Decimal separator (what to treat as decimal point)
+  decimal_separators: ['.', ',']
+
+  # Thousands separator (what to ignore when parsing)
+  thousands_separators: [',', ' ', '\u00a0']  # comma, space, non-breaking space
