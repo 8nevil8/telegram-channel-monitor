@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -36,6 +37,9 @@ class ChannelMonitor:
         self.save_matches = monitoring_config.get('save_matches', True)
         self.matches_file = monitoring_config.get('matches_file', 'logs/matches.json')
         self.max_age_days = monitoring_config.get('max_age_days')
+
+        # Expand user home directory (~) for cross-platform compatibility
+        self.matches_file = os.path.expanduser(self.matches_file)
 
         # Ensure logs directory exists
         Path(self.matches_file).parent.mkdir(parents=True, exist_ok=True)

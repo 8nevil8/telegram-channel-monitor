@@ -25,6 +25,9 @@ def setup_logging(config: dict):
     log_level = monitoring_config.get('log_level', 'INFO')
     log_file = monitoring_config.get('log_file', 'logs/monitor.log')
 
+    # Expand user home directory (~) for cross-platform compatibility
+    log_file = os.path.expanduser(log_file)
+
     # Ensure logs directory exists
     Path(log_file).parent.mkdir(parents=True, exist_ok=True)
 

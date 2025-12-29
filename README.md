@@ -29,6 +29,11 @@ This tool uses Telegram's MTProto API (via Telethon) to authenticate as your per
 - A Telegram account
 - API credentials from Telegram (free)
 
+**Platform Support:**
+- ✅ Linux
+- ✅ Windows
+- ✅ macOS
+
 ## Installation
 
 ### 1. Clone or Download
@@ -37,13 +42,27 @@ This tool uses Telegram's MTProto API (via Telethon) to authenticate as your per
 cd telegram-channel-monitor
 ```
 
-### 2. Install Dependencies
+### 2. Create Virtual Environment (Recommended)
+
+**Linux/macOS:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**Windows:**
+```cmd
+python -m venv venv
+venv\Scripts\activate
+```
+
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Get Telegram API Credentials
+### 4. Get Telegram API Credentials
 
 1. Go to https://my.telegram.org/apps
 2. Log in with your phone number
@@ -51,7 +70,7 @@ pip install -r requirements.txt
 4. Create a new application (any name/description)
 5. Note your `api_id` and `api_hash`
 
-### 4. Configure Environment
+### 5. Configure Environment
 
 ```bash
 cp .env.example .env
@@ -65,7 +84,7 @@ API_HASH=your_api_hash_here
 PHONE_NUMBER=+1234567890
 ```
 
-### 5. Configure Products to Monitor
+### 6. Configure Products to Monitor
 
 Edit `config.yaml` to specify:
 - Channels to monitor
@@ -93,11 +112,31 @@ products:
 
 ## Usage
 
+### Quick Start Scripts
+
+**Linux/macOS:**
+```bash
+./run.sh                 # Real-time monitoring
+./run.sh --history 100   # Check history
+```
+
+**Windows:**
+```cmd
+run.bat                  # Real-time monitoring
+run.bat --history 100    # Check history
+```
+
 ### First Time Setup
 
 On first run, you'll need to authenticate:
 
+**Linux/macOS:**
 ```bash
+python3 -m src.main
+```
+
+**Windows:**
+```cmd
 python -m src.main
 ```
 
@@ -107,8 +146,18 @@ You'll receive a code via Telegram. Enter it to complete authentication. A sessi
 
 Start monitoring for new messages:
 
+**Linux/macOS:**
 ```bash
+python3 -m src.main
+# or use the helper script
+./run.sh
+```
+
+**Windows:**
+```cmd
 python -m src.main
+REM or use the helper script
+run.bat
 ```
 
 The monitor will run continuously and send notifications when matches are found.
@@ -117,8 +166,18 @@ The monitor will run continuously and send notifications when matches are found.
 
 Scan recent messages in channels (useful for initial setup):
 
+**Linux/macOS:**
 ```bash
+python3 -m src.main --history 100
+# or
+./run.sh --history 100
+```
+
+**Windows:**
+```cmd
 python -m src.main --history 100
+REM or
+run.bat --history 100
 ```
 
 This checks the last 100 messages in each channel and processes them in **chronological order (oldest to newest)**. Adjust the number as needed.
@@ -384,16 +443,23 @@ telegram-channel-monitor/
 │   ├── monitor.py        # Channel monitoring logic
 │   ├── matcher.py        # Product matching engine
 │   └── notifier.py       # Notification handler
-├── logs/
-│   ├── monitor.log       # Application logs
-│   └── matches.json      # Saved matches
-├── test_matcher.py       # Comprehensive test suite
-├── config.yaml           # Configuration file
+├── config.yaml           # Configuration file (copy from config.example.yaml)
+├── config.example.yaml   # Configuration template
 ├── .env                  # Environment variables (create from .env.example)
 ├── .env.example          # Environment template
+├── run.sh                # Linux/macOS startup script
+├── run.bat               # Windows startup script
+├── test_matcher.py       # Comprehensive test suite
 ├── requirements.txt      # Python dependencies
-└── README.md            # This file
+└── README.md             # This file
+
+# Logs stored in user's home directory (cross-platform)
+~/.tgmonitor/
+├── monitor.log           # Application logs
+└── matches.json          # Saved matches
 ```
+
+**Note:** Logs and match data are stored in `~/.tgmonitor/` directory in your home folder. This works on all platforms (Linux, macOS, Windows).
 
 ## Notification Example
 
