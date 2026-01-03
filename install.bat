@@ -56,51 +56,101 @@ if %PYTHON_MAJOR% EQU 3 if %PYTHON_MINOR% LSS 8 (
 echo Python version OK
 echo.
 
-REM Step 2: Clean up any previous temporary downloads
-echo [2/12] Preparing temporary directory...
-if exist "%TEMP_DIR%" (
-    echo Cleaning up previous download...
-    rmdir /s /q "%TEMP_DIR%"
-)
-mkdir "%TEMP_DIR%"
-echo Temporary directory ready
-echo.
-
-REM Step 3: Download latest code from GitHub
-echo [3/12] Downloading latest code from GitHub...
-echo This may take a moment...
-powershell -Command "Invoke-WebRequest -Uri '%ZIP_URL%' -OutFile '%TEMP_DIR%\repo.zip'" 2>nul
-if errorlevel 1 (
-    echo ERROR: Failed to download code from GitHub
-    echo Please check your internet connection and try again
-    echo Or download manually from: %REPO_URL%
-    pause
-    exit /b 1
-)
-echo Download complete
-echo.
-
-REM Step 4: Extract downloaded ZIP
-echo [4/12] Extracting files...
-powershell -Command "Expand-Archive -Path '%TEMP_DIR%\repo.zip' -DestinationPath '%TEMP_DIR%' -Force" 2>nul
-if errorlevel 1 (
-    echo ERROR: Failed to extract downloaded files
-    pause
-    exit /b 1
-)
-echo Files extracted
-echo.
-
-REM Find the extracted directory (will be telegram-channel-monitor-master or similar)
-for /d %%i in ("%TEMP_DIR%\telegram-channel-monitor-*") do set "EXTRACTED_DIR=%%i"
-if not exist "%EXTRACTED_DIR%" (
-    echo ERROR: Could not find extracted directory
-    pause
-    exit /b 1
+REM Check if we're running from inside the repository (manual download case)
+set "RUNNING_FROM_REPO=0"
+if exist "%~dp0src\main.py" (
+    if exist "%~dp0requirements.txt" (
+        if exist "%~dp0config.example.yaml" (
+            set "RUNNING_FROM_REPO=1"
+            echo.
+            echo Detected: Running from extracted repository
+            echo Skipping download step...
+            echo.
+        )
+    )
 )
 
-echo Working from: %EXTRACTED_DIR%
-echo.
+REM Step 2: Prepare for installation
+echo [2/12] Preparing installation...
+
+if "%RUNNING_FROM_REPO%"=="1" (
+    REM Running from extracted repo - use current directory
+    set "EXTRACTED_DIR=%~dp0"
+    echo Using current directory as source
+    echo.
+) else (
+    REM Need to download from GitHub
+    if exist "%TEMP_DIR%" (
+        echo Cleaning up previous download...
+        rmdir /s /q "%TEMP_DIR%"
+    )
+    mkdir "%TEMP_DIR%"
+    echo Temporary directory ready
+    echo.
+
+    REM Step 3: Download latest code from GitHub
+    echo [3/12] Downloading latest code from GitHub...
+    echo This may take a moment...
+
+    REM Try modern PowerShell method first (Windows 8+)
+    powershell -Command "Invoke-WebRequest -Uri '%ZIP_URL%' -OutFile '%TEMP_DIR%\repo.zip'" 2>nul
+
+    REM If that failed, try .NET WebClient method (Windows 7 compatible)
+    if errorlevel 1 (
+        echo Trying alternate download method...
+        powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('%ZIP_URL%', '%TEMP_DIR%\repo.zip')" 2>nul
+    )
+
+    REM Check if download succeeded
+    if not exist "%TEMP_DIR%\repo.zip" (
+        echo.
+        echo ========================================
+        echo ERROR: Failed to download code from GitHub
+        echo ========================================
+        echo.
+        echo This can happen on Windows 7 due to outdated TLS support.
+        echo.
+        echo SOLUTION: Manual installation
+        echo.
+        echo 1. Download the ZIP file from:
+        echo    %REPO_URL%
+        echo.
+        echo 2. Click "Code" button, then "Download ZIP"
+        echo.
+        echo 3. Extract the ZIP file
+        echo.
+        echo 4. Run install.bat from inside the extracted folder
+        echo.
+        echo The installer will detect existing files and continue from there.
+        echo.
+        pause
+        exit /b 1
+    )
+    echo Download complete
+    echo.
+
+    REM Step 4: Extract downloaded ZIP
+    echo [4/12] Extracting files...
+    powershell -Command "Expand-Archive -Path '%TEMP_DIR%\repo.zip' -DestinationPath '%TEMP_DIR%' -Force" 2>nul
+    if errorlevel 1 (
+        echo ERROR: Failed to extract downloaded files
+        pause
+        exit /b 1
+    )
+    echo Files extracted
+    echo.
+
+    REM Find the extracted directory (will be telegram-channel-monitor-master or similar)
+    for /d %%i in ("%TEMP_DIR%\telegram-channel-monitor-*") do set "EXTRACTED_DIR=%%i"
+    if not exist "%EXTRACTED_DIR%" (
+        echo ERROR: Could not find extracted directory
+        pause
+        exit /b 1
+    )
+
+    echo Working from: %EXTRACTED_DIR%
+    echo.
+)
 
 REM Step 5: Create installation directory structure
 echo [5/12] Creating directory structure...
@@ -221,9 +271,11 @@ if errorlevel 1 (
 echo.
 
 REM Clean up temporary files
-echo Cleaning up temporary files...
-rmdir /s /q "%TEMP_DIR%" 2>nul
-echo.
+if "%RUNNING_FROM_REPO%"=="0" (
+    echo Cleaning up temporary files...
+    rmdir /s /q "%TEMP_DIR%" 2>nul
+    echo.
+)
 
 REM Installation complete
 echo ========================================

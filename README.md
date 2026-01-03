@@ -39,10 +39,27 @@ This tool uses Telegram's MTProto API (via Telethon) to authenticate as your per
 **Automatic installation scripts that download the latest code and set everything up:**
 
 ### Windows
-Download and run the installer:
-1. Download [install.bat](https://raw.githubusercontent.com/8nevil8/telegram-channel-monitor/master/install.bat) (right-click → Save As)
-2. Double-click `install.bat`
-3. Follow the on-screen instructions
+
+**Option 1: PowerShell One-Liner (Easiest)**
+Open PowerShell and run:
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/8nevil8/telegram-channel-monitor/master/install.bat" -OutFile "install.bat"; .\install.bat
+```
+
+**Option 2: Manual Download**
+1. Download [install.bat](https://raw.githubusercontent.com/8nevil8/telegram-channel-monitor/master/install.bat) (right-click → Save link as)
+2. **Important:** If Chrome saves it as `install.bat.txt`, rename it:
+   - Right-click the file → Rename
+   - Remove the `.txt` extension
+   - Make sure it's `install.bat` not `install.bat.txt`
+3. Double-click `install.bat`
+4. Follow the on-screen instructions
+
+**Option 3: Command Prompt**
+Open Command Prompt and run:
+```cmd
+curl -o install.bat https://raw.githubusercontent.com/8nevil8/telegram-channel-monitor/master/install.bat && install.bat
+```
 
 The installer will:
 - Download latest code from GitHub
