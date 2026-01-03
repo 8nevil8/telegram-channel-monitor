@@ -34,7 +34,71 @@ This tool uses Telegram's MTProto API (via Telethon) to authenticate as your per
 - ✅ Windows
 - ✅ macOS
 
-## Installation
+## Quick Installation (Recommended)
+
+**Automatic installation scripts that download the latest code and set everything up:**
+
+### Windows
+Download and run the installer:
+1. Download [install.bat](https://raw.githubusercontent.com/8nevil8/telegram-channel-monitor/master/install.bat) (right-click → Save As)
+2. Double-click `install.bat`
+3. Follow the on-screen instructions
+
+The installer will:
+- Download latest code from GitHub
+- Install to `%USERPROFILE%\.tgmonitor`
+- Create virtual environment and install dependencies
+- Create a desktop shortcut "Telegram Monitor"
+
+### Linux/macOS
+
+**One-liner install:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/8nevil8/telegram-channel-monitor/master/install.sh | bash
+```
+
+**Or download and run manually:**
+```bash
+curl -O https://raw.githubusercontent.com/8nevil8/telegram-channel-monitor/master/install.sh
+chmod +x install.sh
+./install.sh
+```
+
+The installer will:
+- Download latest code from GitHub
+- Install to `~/.tgmonitor`
+- Create virtual environment and install dependencies
+- Generate executable run script
+
+### After Installation
+
+1. **Edit configuration:**
+   ```bash
+   # Windows
+   notepad %USERPROFILE%\.tgmonitor\config.yaml
+   notepad %USERPROFILE%\.tgmonitor\.env
+
+   # Linux/macOS
+   nano ~/.tgmonitor/config.yaml
+   nano ~/.tgmonitor/.env
+   ```
+
+2. **Run the monitor:**
+   ```bash
+   # Windows: Double-click "Telegram Monitor" desktop shortcut
+   # Or: %USERPROFILE%\.tgmonitor\tgmonitor.bat
+
+   # Linux/macOS
+   ~/.tgmonitor/tgmonitor.sh
+   ```
+
+3. **To update:** Just run the installer again (preserves your config and session)
+
+---
+
+## Manual Installation
+
+If you prefer to install manually or want to develop:
 
 ### 1. Clone or Download
 
