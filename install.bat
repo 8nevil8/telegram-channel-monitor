@@ -57,14 +57,20 @@ echo Python version OK
 echo.
 
 REM Check if we're running from inside the repository (manual download case)
+REM First, change to the directory where this script is located
+cd /d "%~dp0"
+
 set "RUNNING_FROM_REPO=0"
-if exist "%~dp0src\main.py" (
-    if exist "%~dp0requirements.txt" (
-        if exist "%~dp0config.example.yaml" (
+REM Check for repository files in current directory (more reliable on Windows 7)
+if exist "src\main.py" (
+    if exist "requirements.txt" (
+        if exist "config.example.yaml" (
             set "RUNNING_FROM_REPO=1"
             echo.
+            echo ========================================
             echo Detected: Running from extracted repository
             echo Skipping download step...
+            echo ========================================
             echo.
         )
     )
@@ -75,8 +81,9 @@ echo [2/12] Preparing installation...
 
 if "%RUNNING_FROM_REPO%"=="1" (
     REM Running from extracted repo - use current directory
-    set "EXTRACTED_DIR=%~dp0"
-    echo Using current directory as source
+    REM Use CD to get current directory without trailing backslash issues
+    for %%I in (.) do set "EXTRACTED_DIR=%%~fI"
+    echo Using current directory as source: %EXTRACTED_DIR%
     echo.
 ) else (
     REM Need to download from GitHub
